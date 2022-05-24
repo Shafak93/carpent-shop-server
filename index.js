@@ -22,6 +22,7 @@ async function run(){
     try{
         await client.connect();
         const carpentCollection = client.db('carpent-shop').collection('products');
+        const purchasingCollection = client.db('carpent-shop').collection('purchase');
 
         //GET API all products
         app.get('/product', async (req, res) =>{
@@ -52,6 +53,8 @@ async function run(){
             const result = await carpentCollection.updateOne(filter, updateDoc, options)
             res.send(result);
         })
+
+        
     }
     finally{
 
