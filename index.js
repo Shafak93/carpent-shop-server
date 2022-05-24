@@ -22,7 +22,7 @@ async function run(){
     try{
         await client.connect();
         const carpentCollection = client.db('carpent-shop').collection('products');
-        const purchasingCollection = client.db('carpent-shop').collection('purchase');
+        const purchaseCollection = client.db('carpent-shop').collection('purchase');
 
         //GET API all products
         app.get('/product', async (req, res) =>{
@@ -31,6 +31,7 @@ async function run(){
             const products = await cursor.toArray();
             res.send(products);
         })
+        
         //Get API For individual Product
         app.get('/product/:id', async(req, res)=>{
             const id = req.params.id;
@@ -53,6 +54,32 @@ async function run(){
             const result = await carpentCollection.updateOne(filter, updateDoc, options)
             res.send(result);
         })
+        //Purchasing API
+
+        app.post('/purchasing', async(req, res)=>{
+            const newProduct = req.body;
+            const result = await purchaseCollection.insertOne(newProduct);
+            res.send(result);
+        })
+        
+        // app.post('/purchasing', async(req, res)=>{
+        //     const purchasing = req.body;
+        //     const query = {
+        //         user : purchasing.userName ,
+        //         email : purchasing.userEmail,
+        //         phone : purchasing.phone,
+        //         address : purchasing.address,
+        //         orderQuantity : purchasing.orderQuantity,
+        //         productName : purchasing.name
+        //     }
+        //     const exists = await purchaseCollection.findOne(query);
+        //      if(exists){
+        //       return res.send({success : false, purchasing: exists})
+        //      }
+        //      const result = await purchaseCollection.insertOne(purchasing)
+        //      res.send({success: true, result});
+  
+        //   })
 
         
     }
