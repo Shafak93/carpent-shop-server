@@ -14,7 +14,7 @@ app.get('/', (req, res)=>{
 
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.cxu4p.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
@@ -29,6 +29,28 @@ async function run(){
             const cursor = carpentCollection.find(query);
             const products = await cursor.toArray();
             res.send(products);
+        })
+        //Get API For individual Product
+        app.get('/product/:id', async(req, res)=>{
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const product = await carpentCollection.findOne(query);
+            console.log(product)
+            res.send(product);
+        })
+        //PUT API : Update Purchase Product
+        app.put('/product/:id', async (req, res) =>{
+            const id = req.params.id;
+            const updatedProduct = req.body;
+            const filter = {_id : ObjectId(id)};
+            const options = {upsert : true};
+            const updateDoc = {
+                $set: {
+                    availableProduct : updatedProduct.availableProduct 
+                }
+            };
+            const result = await carpentCollection.updateOne(filter, updateDoc, options)
+            res.send(result);
         })
     }
     finally{
