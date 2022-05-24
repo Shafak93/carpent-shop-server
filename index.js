@@ -23,6 +23,7 @@ async function run(){
         await client.connect();
         const carpentCollection = client.db('carpent-shop').collection('products');
         const purchaseCollection = client.db('carpent-shop').collection('purchase');
+        const userCollection = client.db('carpent-shop').collection('users');
 
         //GET API all products
         app.get('/product', async (req, res) =>{
@@ -31,13 +32,24 @@ async function run(){
             const products = await cursor.toArray();
             res.send(products);
         })
+        //PUT API for user
+        app.put('/user/:email', async(req, res){
+            const email = req.params.email;
+            const user = req.body;
+            const filter = {email : email};
+            const options = {upsert : true};
+            const updateDoc = {
+                $set: user
+            };
+            const result = await userCollection.updateOne(filter, updateDoc, options);
+            res.send(result);
+        })
         
         //Get API For individual Product
         app.get('/product/:id', async(req, res)=>{
             const id = req.params.id;
             const query = {_id: ObjectId(id)};
             const product = await carpentCollection.findOne(query);
-            console.log(product)
             res.send(product);
         })
         //PUT API : Update Purchase Product
@@ -54,14 +66,20 @@ async function run(){
             const result = await carpentCollection.updateOne(filter, updateDoc, options)
             res.send(result);
         })
-        //Purchasing API
+        //Purchasing API for inserting product
 
         app.post('/purchasing', async(req, res)=>{
             const newProduct = req.body;
             const result = await purchaseCollection.insertOne(newProduct);
             res.send(result);
         })
-        
+        // GET api for purchasing product
+        app.get('/purchasing', async (req, res) =>{
+            const email = req.query.userEmail
+            const query = {userEmail: email};
+            const purchasings = await purchaseCollection.find(query).toArray();
+            res.send(purchasings);
+        })
         // app.post('/purchasing', async(req, res)=>{
         //     const purchasing = req.body;
         //     const query = {
