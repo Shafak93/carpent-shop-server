@@ -53,16 +53,28 @@ async function run(){
             const users = await userCollection.find().toArray();
             res.send(users);
         })
-        //PUT API for user admin
+        //GET API for ADMIN
+        app.get('/admin/:email', async (req, res)=>{
+            const email = req.params.email;
+            const user = await userCollection.findOne({email :email});
+            const isAdmin = user.roll === 'admin';
+            res.send({admin : isAdmin})
+        })
+        //PUT API for Making admin
         app.put('/user/admin/:email',verifyJWT,  async(req, res)=>{
             const email = req.params.email;
-            // const user = req.body;
-            const filter = {email : email};
-            const updateDoc = {
+            const initiator = req.decoded.email;
+            const initiatorAccount = await userCollection.findOne({email : initiator});
+            if(initiatorAccount.roll === 'admin' ){
+                const filter = {email : email};
+                const updateDoc = {
                 $set: {roll : 'admin'},
             };
             const result = await userCollection.updateOne(filter, updateDoc);
             res.send(result);
+            }else{
+                res.status(403).send({message: 'forbidden'});
+            }
         })
         //PUT API for user
         app.put('/user/:email',  async(req, res)=>{
