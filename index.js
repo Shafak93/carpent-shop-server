@@ -19,6 +19,21 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.cxu4p.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+function verifyJWT(req, res, next){
+    const authHeader = req.headers.authorization;
+    if(!authHeader){
+      return res.status(401).send({message: 'Unauthorized access'})
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN, function(err, decoded) {
+      if(err){
+        return res.status(403).send({message: 'Forbidden access'})
+      }
+      req.decoded = decoded;
+      next();
+    });
+  }
+
 async function run(){
     try{
         await client.connect();
@@ -33,8 +48,25 @@ async function run(){
             const products = await cursor.toArray();
             res.send(products);
         })
+        //GET API for all users
+        app.get('/user', async(req, res)=>{
+            const users = await userCollection.find().toArray();
+            res.send(users);
+        })
+        //PUT API for user admin
+        app.put('/user/admin/:email',  async(req, res)=>{
+            const email = req.params.email;
+            // const user = req.body;
+            const filter = {email : email};
+            
+            const updateDoc = {
+                $set: {roll : 'admin'},
+            };
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
         //PUT API for user
-        app.put('/user/:email', async(req, res)=>{
+        app.put('/user/:email',  async(req, res)=>{
             const email = req.params.email;
             const user = req.body;
             const filter = {email : email};
@@ -76,11 +108,18 @@ async function run(){
             res.send(result);
         })
         // GET api for purchasing product
-        app.get('/purchasing', async (req, res) =>{
+        app.get('/purchasing', verifyJWT, async (req, res) =>{
             const email = req.query.userEmail
-            const query = {userEmail: email};
-            const purchasings = await purchaseCollection.find(query).toArray();
-            res.send(purchasings);
+            const decodedEmail = req.decoded.email;
+            if(email === decodedEmail){
+                const query = {userEmail: email};
+                const purchasings = await purchaseCollection.find(query).toArray();
+                res.send(purchasings);
+            }else{
+                return res.status(403).send({message: 'forbidden access'})
+              }
+            // const authorization = req.headers.authorization;
+            
         })
         // app.post('/purchasing', async(req, res)=>{
         //     const purchasing = req.body;
