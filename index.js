@@ -48,6 +48,13 @@ async function run(){
             const products = await cursor.toArray();
             res.send(products);
         })
+        //POST API for inserting product
+
+        app.post('/product', async(req, res)=>{
+            const newProduct = req.body;
+            const result = await carpentCollection.insertOne(newProduct);
+            res.send(result);
+        })
         //GET API for all users
         app.get('/user',verifyJWT, async(req, res)=>{
             const users = await userCollection.find().toArray();
