@@ -40,8 +40,10 @@ async function run(){
         const carpentCollection = client.db('carpent-shop').collection('products');
         const purchaseCollection = client.db('carpent-shop').collection('purchase');
         const userCollection = client.db('carpent-shop').collection('users');
+        const profileCollection = client.db('carpent-shop').collection('profile');
+        const reviewCollection = client.db('carpent-shop').collection('review');
 
-        //GET API all products
+        //GET API all products for displaying on Home page
         app.get('/product', async (req, res) =>{
             const query = {};
             const cursor = carpentCollection.find(query);
@@ -66,6 +68,25 @@ async function run(){
             const user = await userCollection.findOne({email :email});
             const isAdmin = user.roll === 'admin';
             res.send({admin : isAdmin})
+        })
+        //Get API for profile
+        app.get('/profile/:email', async(req, res)=>{
+            const email = req.params.email;
+            const user = await profileCollection.findOne({email:email})
+            res.send(user)
+        })
+        //PUT API for profile
+        app.put('/profile/:email', async(req, res)=>{
+            const email = req.params.email;
+            const user = req.body;
+            const filter = {email : email};
+            const options = {upsert : true};
+            const updateDoc = {
+                $set: user
+            };
+            const result = await profileCollection.updateOne(filter, updateDoc, options);
+            res.send(result);
+
         })
         //PUT API for Making admin
         app.put('/user/admin/:email',verifyJWT,  async(req, res)=>{
@@ -138,6 +159,17 @@ async function run(){
               }
             // const authorization = req.headers.authorization;
             
+        })
+        //POST API for Review
+        app.post('/review', async(req, res)=>{
+            const newReview = req.body;
+            const result = await reviewCollection.insertOne(newReview);
+            res.send(result);
+        })
+        //GET API for all review
+        app.get('/review', async(req, res)=>{
+            const reviews = await reviewCollection.find().toArray();
+            res.send(reviews);
         })
         // app.post('/purchasing', async(req, res)=>{
         //     const purchasing = req.body;
